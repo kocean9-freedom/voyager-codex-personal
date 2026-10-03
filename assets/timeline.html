@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voyager 时间线</title>
+  <style>
+    :root { color-scheme: light dark; font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --bg:#f7f8fa; --paper:#fff; --ink:#20242b; --muted:#68717d; --line:#e3e6eb; --accent:#3e6dd7; --user:#eaf0ff; --assistant:#eef6f1; }
+    * { box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    body { margin:0; background:var(--bg); color:var(--ink); }
+    .shell { height:100dvh; display:grid; grid-template-rows:auto minmax(0,1fr); }
+    header { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px 24px; align-items:center; padding:16px 22px; border-bottom:1px solid var(--line); background:var(--paper); }
+    .brand { display:flex; align-items:baseline; gap:10px; min-width:0; }
+    .brand strong { font-size:18px; letter-spacing:-.02em; }
+    .brand span { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .tools { display:flex; align-items:center; gap:8px; }
+    input, button { font:inherit; }
+    input { border:1px solid var(--line); border-radius:9px; padding:8px 10px; background:var(--paper); color:var(--ink); }
+    #search { width:min(28vw,260px); }
+    #folder { width:140px; }
+    button { cursor:pointer; }
+    .subline { grid-column:1/-1; color:var(--muted); font-size:12px; }
+    .notice { color:#9a5d0b; }
+    .layout { display:grid; grid-template-columns:minmax(210px,30%) minmax(0,1fr); min-height:0; }
+    nav, main { overflow:auto; scroll-behavior:smooth; }
+    nav { border-right:1px solid var(--line); padding:12px; background:var(--paper); }
+    .nav-head { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; padding:4px 8px 10px; }
+    .node-link { width:100%; display:grid; grid-template-columns:28px minmax(0,1fr) 18px; gap:8px; align-items:start; padding:10px 8px; border:0; border-radius:10px; background:transparent; text-align:left; color:var(--ink); }
+    .node-link:hover, .node-link.active { background:var(--bg); }
+    .index { color:var(--muted); font-variant-numeric:tabular-nums; }
+    .nav-text { min-width:0; }
+    .nav-text b { display:block; font-size:12px; margin-bottom:2px; }
+    .nav-text span { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; color:var(--muted); font-size:12px; }
+    .star-mark { color:#d39521; text-align:center; }
+    main { padding:20px clamp(14px,4vw,52px) 70px; }
+    .intro { max-width:860px; margin:0 auto 20px; color:var(--muted); font-size:12px; }
+    .card { max-width:860px; margin:0 auto 16px; border:1px solid var(--line); border-radius:14px; background:var(--paper); scroll-margin-top:16px; overflow:hidden; }
+    .card:target, .card.selected { outline:2px solid var(--accent); outline-offset:2px; }
+    .card-head { display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid var(--line); padding:10px 16px; }
+    .role { display:inline-flex; align-items:center; gap:7px; font-weight:600; }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); }
+    .assistant .dot { background:#3b976a; }
+    .card-head small { color:var(--muted); }
+    .card-head button { border:1px solid var(--line); border-radius:8px; padding:5px 9px; background:var(--paper); color:var(--muted); }
+    .card-head button[aria-pressed="true"] { color:#a96500; background:#fff6df; border-color:#efce81; }
+    .body { white-space:pre-wrap; overflow-wrap:anywhere; padding:16px; font-size:14px; line-height:1.75; }
+    .empty { padding:36px; text-align:center; color:var(--muted); }
+    .status { position:fixed; bottom:12px; right:16px; padding:8px 12px; border-radius:8px; background:var(--ink); color:var(--paper); opacity:0; transition:opacity .2s; pointer-events:none; }
+    .status.show { opacity:1; }
+    @media (prefers-color-scheme:dark) { :root { --bg:#171b21; --paper:#20252c; --ink:#eef1f5; --muted:#aab4c1; --line:#343b45; --accent:#8db1ff; --user:#263654; --assistant:#223e33; } }
+    @media (max-width:720px) { header { grid-template-columns:1fr; padding:12px; } .tools { flex-wrap:wrap; } #search { width:100%; flex:1 1 160px; } .layout { grid-template-columns:minmax(125px,35%) minmax(0,1fr); } nav { padding:6px; } .node-link { grid-template-columns:20px minmax(0,1fr); gap:4px; padding:8px 4px; } .star-mark { display:none; } main { padding:12px 10px 60px; } .body { padding:12px; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand"><strong>Voyager</strong><span id="title"></span></div>
+      <div class="tools"><input id="search" type="search" placeholder="搜索消息" aria-label="搜索消息"><input id="folder" type="text" placeholder="个人文件夹" aria-label="个人文件夹"><button id="save-folder" type="button">保存文件夹</button></div>
+      <div class="subline"><span id="summary"></span> · 点击左侧节点可跳到本面板中的消息。原会话内的精确定位目前不可用。 <span class="notice" id="incomplete"></span></div>
+    </header>
+    <div class="layout">
+      <nav aria-label="消息时间线"><div class="nav-head"><span>时间线</span><span id="visible-count"></span></div><div id="nodes"></div></nav>
+      <main id="messages"><p class="intro">按对话顺序排列。星标与文件夹保存在这台设备上；这里显示的是读取时的消息快照。</p><div id="cards"></div><div id="empty" class="empty" hidden>没有匹配的消息</div></main>
+    </div>
+  </div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <script id="voyager-data" type="application/json">__VOYAGER_DATA__</script>
+  <script>
+    const initial = JSON.parse(document.getElementById("voyager-data").textContent);
+    const timeline = initial.timeline;
+    const base = `/${initial.token}`;
+    const stars = new Set(initial.state.stars);
+    const cards = new Map();
+    const links = new Map();
+    const $ = id => document.getElementById(id);
+    const label = role => role === "user" ? "你" : "助手";
+    let selected = null;
+    let toastTimer;
+
+    $("title").textContent = timeline.title;
+    $("folder").value = initial.state.folder;
+    $("summary").textContent = `${timeline.kind === "chatgpt" ? "普通聊天" : "Codex 工作任务"} · ${timeline.nodes.length} 条消息`;
+    $("incomplete").textContent = timeline.incomplete ? "· 还有更早的消息未读取" : "";
+
+    function toast(message) {
+      $("status").textContent = message;
+      $("status").classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => $("status").classList.remove("show"), 3000);
+    }
+    async function post(route, payload) {
+      const response = await fetch(`${base}/${route}`, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)});
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "保存失败");
+      return result;
+    }
+    function updateStars() {
+      for (const node of timeline.nodes) {
+        const starred = stars.has(node.id);
+        links.get(node.id).querySelector(".star-mark").textContent = starred ? "★" : "";
+        const button = cards.get(node.id).querySelector(".star-button");
+        button.setAttribute("aria-pressed", String(starred));
+        button.textContent = starred ? "★ 已星标" : "☆ 加星标";
+      }
+    }
+    function select(id) {
+      if (selected) { links.get(selected)?.classList.remove("active"); cards.get(selected)?.classList.remove("selected"); }
+      selected = id;
+      links.get(id)?.classList.add("active");
+      cards.get(id)?.classList.add("selected");
+      cards.get(id)?.scrollIntoView({behavior:"smooth", block:"start"});
+    }
+    for (const [index, node] of timeline.nodes.entries()) {
+      const link = document.createElement("button");
+      link.type = "button";
+      link.className = "node-link";
+      link.dataset.id = node.id;
+      const number = document.createElement("span"); number.className = "index"; number.textContent = String(index + 1).padStart(2, "0");
+      const text = document.createElement("span"); text.className = "nav-text";
+      const who = document.createElement("b"); who.textContent = label(node.role);
+      const excerpt = document.createElement("span"); excerpt.textContent = node.excerpt;
+      text.append(who, excerpt);
+      const mark = document.createElement("span"); mark.className = "star-mark";
+      link.append(number, text, mark);
+      link.addEventListener("click", () => select(node.id));
+      $("nodes").append(link);
+      links.set(node.id, link);
+
+      const card = document.createElement("article"); card.className = `card ${node.role}`; card.id = `m-${node.id}`; card.dataset.id = node.id;
+      const head = document.createElement("div"); head.className = "card-head";
+      const role = document.createElement("div"); role.className = "role";
+      const dot = document.createElement("span"); dot.className = "dot";
+      const roleText = document.createElement("span"); roleText.textContent = `${String(index + 1).padStart(2, "0")} · ${label(node.role)}`;
+      role.append(dot, roleText);
+      const star = document.createElement("button"); star.type = "button"; star.className = "star-button";
+      star.addEventListener("click", async () => {
+        star.disabled = true;
+        try { const state = await post("star", {message_id:node.id, starred:!stars.has(node.id)}); stars.clear(); state.stars.forEach(id => stars.add(id)); updateStars(); toast("星标已保存"); }
+        catch (error) { toast(error.message); }
+        finally { star.disabled = false; }
+      });
+      head.append(role, star);
+      const body = document.createElement("div"); body.className = "body"; body.textContent = node.text;
+      card.append(head, body);
+      $("cards").append(card);
+      cards.set(node.id, card);
+    }
+    updateStars();
+
+    function filter() {
+      const query = $("search").value.trim().toLocaleLowerCase();
+      let count = 0;
+      for (const node of timeline.nodes) {
+        const visible = !query || node.text.toLocaleLowerCase().includes(query);
+        links.get(node.id).hidden = !visible;
+        cards.get(node.id).hidden = !visible;
+        if (visible) count++;
+      }
+      $("visible-count").textContent = `${count} / ${timeline.nodes.length}`;
+      $("empty").hidden = count !== 0;
+    }
+    $("search").addEventListener("input", filter);
+    filter();
+    $("save-folder").addEventListener("click", async () => {
+      const button = $("save-folder"); button.disabled = true;
+      try { const state = await post("folder", {folder:$("folder").value}); $("folder").value = state.folder; toast(state.folder ? "文件夹已保存" : "已移出文件夹"); }
+      catch (error) { toast(error.message); }
+      finally { button.disabled = false; }
+    });
+    $("folder").addEventListener("keydown", event => { if (event.key === "Enter") $("save-folder").click(); });
+    if (location.hash.startsWith("#m-")) { const id = location.hash.slice(3); if (cards.has(id)) select(id); }
+  </script>
+</body>
+</html>

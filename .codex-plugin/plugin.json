@@ -1,0 +1,25 @@
+{
+  "name": "voyager-codex-personal",
+  "version": "0.2.0+codex.20261003023843",
+  "description": "Interactive local timelines, message stars, and folders for Codex tasks and ChatGPT chats.",
+  "author": {
+    "name": "kocean9-freedom"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Voyager Codex Personal",
+    "shortDescription": "\u7edf\u4e00\u56de\u770b\u5de5\u4f5c\u4e0e\u804a\u5929\u3001\u6536\u85cf\u91cd\u70b9\u3001\u6574\u7406\u4e2a\u4eba\u6587\u4ef6\u5939\u3002",
+    "longDescription": "\u4ece Codex \u5de5\u4f5c\u4efb\u52a1\u8bfb\u53d6\u5de5\u4f5c\u4efb\u52a1\u548c\u666e\u901a ChatGPT \u804a\u5929\uff0c\u5728\u72ec\u7acb\u672c\u673a\u9875\u9762\u663e\u793a\u6d88\u606f\u65f6\u95f4\u7ebf\uff0c\u5e76\u4fdd\u5b58\u672c\u5730\u661f\u6807\u4e0e\u4e2a\u4eba\u6587\u4ef6\u5939\u3002\u4e0d\u4f1a\u5728\u666e\u901a\u804a\u5929\u539f\u751f\u9875\u9762\u6dfb\u52a0\u65f6\u95f4\u7ebf\u3002",
+    "developerName": "kocean9-freedom",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "\u4e3a\u8fd9\u4e2a\u5de5\u4f5c\u4efb\u52a1\u6216\u666e\u901a\u804a\u5929\u751f\u6210\u72ec\u7acb\u6d88\u606f\u65f6\u95f4\u7ebf\u3002",
+      "\u6536\u85cf\u8fd9\u6761\u56de\u7b54\uff0c\u5e76\u5217\u51fa\u672c\u4f1a\u8bdd\u7684\u661f\u6807\u3002",
+      "\u628a\u8fd9\u4e2a\u5de5\u4f5c\u4efb\u52a1\u6216\u666e\u901a\u804a\u5929\u653e\u8fdb\u4e2a\u4eba\u6587\u4ef6\u5939\u3002"
+    ]
+  }
+}
